@@ -2,10 +2,10 @@ cmake_minimum_required( VERSION 2.8.12 )
 
 project( function_stream_prj )
 
-find_package( Boost 1.58.0 COMPONENTS system iostreams filesystem regex unit_test_framework REQUIRED )
+#find_package( Boost 1.58.0 COMPONENTS system iostreams filesystem regex unit_test_framework REQUIRED )
 
-enable_testing( )
-add_definitions( -DBOOST_ALL_NO_LIB )
+#enable_testing( )
+#add_definitions( -DBOOST_ALL_NO_LIB )
 
 find_package( Threads REQUIRED )
 
@@ -70,7 +70,7 @@ add_dependencies( future_process_lib dependency_stub )
 
 add_executable( future_process_test_bin EXCLUDE_FROM_ALL ${TEST_FOLDER}/future_process_test.cpp )
 target_link_libraries( future_process_test_bin future_process_lib ${Boost_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} )
-add_test( future_process_test future_process_test_bin )
+#add_test( future_process_test future_process_test_bin )
 add_dependencies( check future_process_test_bin )
 
 install( TARGETS future_process_lib DESTINATION lib )

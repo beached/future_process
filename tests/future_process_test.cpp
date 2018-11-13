@@ -30,17 +30,14 @@ struct done_t {
 };
 
 int main( ) {
-	auto f = daw::make_future_process<int>( []( unsigned int i ) {
+	auto f = daw::make_future_process<void>( []( unsigned int i ) {
 		sleep( i );
-		done_t result{};
-		result.done = 1212;
-		std::cout << "child\n";
-		return result;
+		std::cout << "child" << i <<'\n';
 	} );
 
 	auto p = f( 4000 );
 	auto msg = p.get( );
 
-	std::cout << msg.done << ' ' << msg.msg << '\n';
+	std::cout << msg.done << ' ' << '\n';
 	return 0;
 }
