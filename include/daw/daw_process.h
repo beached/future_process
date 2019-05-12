@@ -45,9 +45,9 @@ namespace daw::process {
 			                                                       "Error forking" );
 			if( m_pid == 0 ) {
 				try {
-					Unused( daw::invoke( std::forward<Function>( func ),
-					                     std::forward<Args>( args )... ) );
-				} catch(...) { exit( 1 ); }
+					(void)daw::invoke( std::forward<Function>( func ),
+					                   std::forward<Args>( args )... );
+				} catch( ... ) { exit( 1 ); }
 				exit( 0 );
 			}
 		}
@@ -64,11 +64,15 @@ namespace daw::process {
 			return *this;
 		}
 
+		void wait( ) const noexcept {
+			int status = 0;
+			waitpid( m_pid, &status, WUNTRACED );
+		}
+
 		~fork_process( ) noexcept {
 			if( auto tmp = std::exchange( m_pid, -1 ) > 0 ) {
 				if( wait_on_pid ) {
-					int status = 0;
-					waitpid( m_pid, &status, WUNTRACED );
+					wait( );
 				}
 			}
 		}

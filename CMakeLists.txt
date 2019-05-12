@@ -55,5 +55,13 @@ add_test( future_process_test future_process_test_bin )
 add_dependencies( check future_process_test_bin )
 add_dependencies( full future_process_test_bin )
 
+#add_executable( process_test_bin EXCLUDE_FROM_ALL ${HEADER_FILES} ${TEST_FOLDER}/process_test.cpp )
+add_executable( process_test_bin ${HEADER_FILES} ${TEST_FOLDER}/process_test.cpp )
+add_dependencies( process_test_bin dependency_stub )
+target_link_libraries( process_test_bin uv )
+add_test( process_test process_test_bin )
+add_dependencies( check process_test_bin )
+add_dependencies( full process_test_bin )
+
 install( DIRECTORY ${HEADER_FOLDER}/daw/ DESTINATION include/daw/ )
 

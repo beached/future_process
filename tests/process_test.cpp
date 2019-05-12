@@ -20,54 +20,37 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include <iostream>
+#include <cassert>
+#include <cstdio>
 #include <numeric>
 
-#include "daw/daw_future_process.h"
-
-struct A {
-	double a = 0.0;
-	float b = 0.0;
-	unsigned long long c = 0;
-
-	void show( ) const {
-		std::cout << "a: " << a << " b: " << b << " c: " << c << '\n';
-	}
-};
+#include "daw/daw_process.h"
+#include "daw/daw_semaphore.h"
 
 int main( ) {
-	auto const func = []( int b ) {
-		// sleep( 5 );
-		return b * b;
-	};
+	auto sem = daw::semaphore_t( );
 
-	auto f1 = daw::process::async( func, 5 );
-	auto f2 = daw::process::async( func, 10 );
+	auto proc = daw::process::fork_process(
+	  [&sem]( int t ) {
+		  sleep( t );
+		  sem.post( );
+	  },
+	  5 );
 
-	std::cout << f1.get( ) + f2.get( ) << '\n';
+	puts( "Waiting on child\n" );
+	proc.wait( );
+	assert( sem.try_wait( ) );
+	puts( "Child complete\n" );
 
-	std::vector<std::future<int>> futs{};
+	proc = daw::process::fork_process(
+	  [&sem]( int t ) {
+		  sleep( t );
+		  throw std::exception( );
+	  },
+	  2 );
 
-	for( size_t n = 0; n < 100; ++n ) {
-		futs.push_back( daw::process::async( func, n ) );
-	}
-	auto sums = std::accumulate( futs.begin( ), futs.end( ), 0,
-	                             []( int s, auto &f ) { return s + f.get( ); } );
-
-	std::cout << "sums: " << sums << '\n';
-
-	auto const func2 = []( int arg ) {
-		A result{};
-		result.a = arg * 1.23456;
-		result.b = arg * 10.0f * 1.23456f;
-		result.c = arg * 100.0 * 123456;
-
-		return result;
-	};
-
-	auto f3 = daw::process::async( func2, 5 );
-	auto f4 = daw::process::async( func2, 10 );
-
-	f3.get( ).show( );
-	f4.get( ).show( );
+	puts( "Waiting on child\n" );
+	proc.wait( );
+	assert( !sem.try_wait( ) );
+	puts( "Child successfully errored\n" );
 }
