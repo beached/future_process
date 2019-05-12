@@ -34,7 +34,37 @@ proc.join( );
 puts( "Child completed\n" );
 ```
 
+## Semaphore
 
+A semaphore that allows post, wait, and try_wait operations.
 
+```cpp
+#include <daw/daw_process.h>
+#include <daw/daw_semaphore.h>
 
-	
+auto sem_a = daw::process::semaphore( );
+auto sem_b = daw::process::semaphore( );
+
+auto sem_a = daw::process::semaphore( );
+auto sem_b = daw::process::semaphore( );
+
+auto proc = daw::process::fork_process( [&]( unsigned int t ) {
+	while( true ) {
+		puts( "child: sleeping\n" );
+		sleep( t );
+		puts( "child: awake\n" );
+		sem_b.post( );
+		puts( "child: awaiting parent acknowledgement\n" );
+		sem_a.wait( );
+		puts( "child: got parent's acknowledgement\n" );
+	}
+}, 2 );
+
+while( true ) {
+	puts( "parent: awaiting child\n" );
+	sem_b.wait( );
+	puts( "parent: got child's post\n" );
+	sem_a.post( );
+	puts( "parent: sent child's post\n" );
+}
+```
