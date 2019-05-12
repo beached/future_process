@@ -29,7 +29,8 @@ int main( ) {
 		return b * b;
 	} );
 
-	auto f = a( 5 );
+	auto f1 = a( 5 );
+	auto f2 = a( 10 );
 
-	std::cout << f.get( ) << '\n';
+	std::cout << f1.get( ) + f2.get( ) << '\n';
 }
