@@ -25,13 +25,9 @@
 #include <string>
 #include <sys/mman.h>
 
-#include <daw/daw_random.h>
-
-#include "daw_semaphore.h"
-
 namespace daw {
 	template<typename T>
-	class shared_memory_t {
+	class shared_memory {
 		volatile char *m_data;
 		bool m_is_copy = false;
 
@@ -49,20 +45,20 @@ namespace daw {
 		}
 
 	public:
-		shared_memory_t( ) noexcept
+		shared_memory( ) noexcept
 		  : m_data( static_cast<volatile char *>(
 		      mmap( nullptr, sizeof( T ), PROT_READ | PROT_WRITE,
 		            MAP_SHARED | MAP_ANONYMOUS, -1, 0 ) ) ) {}
 
-		~shared_memory_t( ) noexcept {
+		~shared_memory( ) noexcept {
 			cleanup( );
 		}
 
-		shared_memory_t( shared_memory_t const &other ) noexcept
+		shared_memory( shared_memory const &other ) noexcept
 		  : m_data( other.m_data )
 		  , m_is_copy( true ) {}
 
-		shared_memory_t &operator=( shared_memory_t const &rhs ) noexcept {
+		shared_memory &operator=( shared_memory const &rhs ) noexcept {
 			if( this != &rhs ) {
 				cleanup( );
 				m_data = rhs.m_data;
@@ -70,11 +66,11 @@ namespace daw {
 			return *this;
 		}
 
-		shared_memory_t( shared_memory_t &&other ) noexcept
+		shared_memory( shared_memory &&other ) noexcept
 		  : m_data( std::exchange( other.m_data, nullptr ) )
 		  , m_is_copy( std::exchange( other.m_is_copy, true ) ) {}
 
-		shared_memory_t &operator=( shared_memory_t &&rhs ) noexcept {
+		shared_memory &operator=( shared_memory &&rhs ) noexcept {
 			if( this != &rhs ) {
 				cleanup( );
 				m_data = std::exchange( rhs.m_data, nullptr );

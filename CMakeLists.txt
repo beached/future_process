@@ -63,5 +63,13 @@ add_test( process_test process_test_bin )
 add_dependencies( check process_test_bin )
 add_dependencies( full process_test_bin )
 
+#add_executable( semaphore_test_bin EXCLUDE_FROM_ALL ${HEADER_FILES} ${TEST_FOLDER}/semaphore_test.cpp )
+add_executable( semaphore_test_bin ${HEADER_FILES} ${TEST_FOLDER}/semaphore_test.cpp )
+add_dependencies( semaphore_test_bin dependency_stub )
+target_link_libraries( semaphore_test_bin uv )
+add_test( semaphore_test semaphore_test_bin )
+add_dependencies( check semaphore_test_bin )
+add_dependencies( full semaphore_test_bin )
+
 install( DIRECTORY ${HEADER_FOLDER}/daw/ DESTINATION include/daw/ )
 

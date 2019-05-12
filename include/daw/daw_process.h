@@ -23,6 +23,7 @@
 #pragma once
 
 #include <cstddef>
+#include <functional>
 #include <sys/wait.h>
 #include <unistd.h>
 
@@ -32,8 +33,10 @@
 
 namespace daw::process {
 	template<bool wait_on_pid = true>
-	class fork_process {
-		pid_t m_pid = -1;
+	struct fork_process {
+		using native_handle_type = ::pid_t;
+
+		native_handle_type m_pid = -1;
 		bool m_is_detached = !wait_on_pid;
 
 	public:
@@ -46,7 +49,7 @@ namespace daw::process {
 			                                                       "Error forking" );
 			if( m_pid == 0 ) {
 				try {
-					(void)daw::invoke( std::forward<Function>( func ),
+					(void)std::invoke( std::forward<Function>( func ),
 					                   std::forward<Args>( args )... );
 				} catch( ... ) { exit( 1 ); }
 				exit( 0 );
@@ -76,6 +79,10 @@ namespace daw::process {
 			if( !m_is_detached ) {
 				join( );
 			}
+		}
+
+		constexpr native_handle_type native_handle( ) const noexcept {
+			return m_pid;
 		}
 
 		constexpr void detach( ) noexcept {

@@ -60,7 +60,7 @@ int main( ) {
 		A result{};
 		result.a = arg * 1.23456;
 		result.b = arg * 10.0f * 1.23456f;
-		result.c = arg * 100.0 * 123456;
+		result.c = static_cast<unsigned long long>( arg ) * 12345600ULL;
 
 		return result;
 	};

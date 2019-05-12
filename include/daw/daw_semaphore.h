@@ -26,8 +26,8 @@
 
 #include <daw/daw_random.h>
 
-namespace daw {
-	class semaphore_t {
+namespace daw::process {
+	class semaphore {
 		sem_t *m_sem;
 		bool m_is_copy = false;
 
@@ -50,21 +50,21 @@ namespace daw {
 		}
 
 	public:
-		semaphore_t( ) noexcept
+		semaphore( ) noexcept
 		  : m_sem( get_sem( 0 ) ) {}
 
-		explicit semaphore_t( int initial_value ) noexcept
+		explicit semaphore( int initial_value ) noexcept
 		  : m_sem( get_sem( initial_value ) ) {}
 
-		~semaphore_t( ) noexcept {
+		~semaphore( ) noexcept {
 			cleanup( );
 		}
 
-		semaphore_t( semaphore_t const &other ) noexcept
+		semaphore( semaphore const &other ) noexcept
 		  : m_sem( other.m_sem )
 		  , m_is_copy( true ) {}
 
-		semaphore_t &operator=( semaphore_t const &rhs ) noexcept {
+		semaphore &operator=( semaphore const &rhs ) noexcept {
 			if( this != &rhs ) {
 				cleanup( );
 				m_sem = rhs.m_sem;
@@ -72,11 +72,11 @@ namespace daw {
 			return *this;
 		}
 
-		semaphore_t( semaphore_t &&other ) noexcept
+		semaphore( semaphore &&other ) noexcept
 		  : m_sem( std::exchange( other.m_sem, nullptr ) )
 		  , m_is_copy( std::exchange( other.m_is_copy, true ) ) {}
 
-		semaphore_t &operator=( semaphore_t &&rhs ) noexcept {
+		semaphore &operator=( semaphore &&rhs ) noexcept {
 			if( this != &rhs ) {
 				cleanup( );
 				m_sem = std::exchange( rhs.m_sem, nullptr );
@@ -98,4 +98,4 @@ namespace daw {
 			sem_post( m_sem );
 		}
 	};
-} // namespace daw
+} // namespace daw::process

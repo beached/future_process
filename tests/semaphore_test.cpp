@@ -20,37 +20,30 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include <cassert>
-#include <cstdio>
-#include <numeric>
-
-#include "daw/daw_process.h"
-#include "daw/daw_semaphore.h"
+#include <daw/daw_process.h>
+#include <daw/daw_semaphore.h>
 
 int main( ) {
-	auto sem = daw::process::semaphore( );
+	auto sem_a = daw::process::semaphore( );
+	auto sem_b = daw::process::semaphore( );
 
-	auto proc = daw::process::fork_process(
-	  [&sem]( unsigned int t ) {
-		  sleep( t );
-		  sem.post( );
-	  },
-	  5 );
+	auto proc = daw::process::fork_process( [&]( unsigned int t ) {
+		while( true ) {
+			puts( "child: sleeping\n" );
+			sleep( t );
+			puts( "child: awake\n" );
+			sem_b.post( );
+			puts( "child: awaiting parent acknowledgement\n" );
+			sem_a.wait( );
+			puts( "child: got parent's acknowledgement\n" );
+		}
+	}, 2 );
 
-	puts( "Waiting on child\n" );
-	proc.join( );
-	assert( sem.try_wait( ) );
-	puts( "Child complete\n" );
-
-	proc = daw::process::fork_process(
-	  []( unsigned int t ) {
-		  sleep( t );
-		  throw std::exception( );
-	  },
-	  2 );
-
-	puts( "Waiting on child\n" );
-	proc.join( );
-	assert( !sem.try_wait( ) );
-	puts( "Child successfully errored\n" );
+	while( true ) {
+		puts( "parent: awaiting child\n" );
+		sem_b.wait( );
+		puts( "parent: got child's post\n" );
+		sem_a.post( );
+		puts( "parent: sent child's post\n" );
+	}
 }
