@@ -20,12 +20,14 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "daw/future_process.h"
 #include <iostream>
+#include <numeric>
+
+#include "daw/future_process.h"
 
 int main( ) {
 	auto a = daw::process::future_process<int( int )>( []( int b ) {
-		std::cout << "process\n";
+		sleep( 5 );
 		return b * b;
 	} );
 
@@ -33,4 +35,14 @@ int main( ) {
 	auto f2 = a( 10 );
 
 	std::cout << f1.get( ) + f2.get( ) << '\n';
+
+	std::vector<std::future<int>> futs{};
+
+	for( size_t n = 0; n < 100; ++n ) {
+		futs.push_back( a( n ) );
+	}
+	auto sums = std::accumulate( futs.begin( ), futs.end( ), 0,
+	                             []( int s, auto &f ) { return s + f.get( ); } );
+
+	std::cout << "sums: " << sums << '\n';
 }
