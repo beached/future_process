@@ -71,6 +71,9 @@ while( true ) {
 A way to send and ackknowledge a message has been both sent and recieved.
 
 ```cpp
+#include <daw/daw_channel.h>
+#include <daw/daw_process.h>
+
 auto chan = daw::process::channel<unsigned int>( );
 
 auto proc = daw::process::fork_process( [&chan]( unsigned int t ) {
