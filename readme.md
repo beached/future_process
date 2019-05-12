@@ -45,9 +45,6 @@ A semaphore that allows post, wait, and try_wait operations.
 auto sem_a = daw::process::semaphore( );
 auto sem_b = daw::process::semaphore( );
 
-auto sem_a = daw::process::semaphore( );
-auto sem_b = daw::process::semaphore( );
-
 auto proc = daw::process::fork_process( [&]( unsigned int t ) {
 	while( true ) {
 		puts( "child: sleeping\n" );
