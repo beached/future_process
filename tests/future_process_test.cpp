@@ -23,8 +23,9 @@
 #include <iostream>
 #include <numeric>
 
-#include "daw/future_process.h"
-#include "daw/daw_read_file.h"
+#include <daw/daw_read_file.h>
+
+#include "daw/daw_future_process.h"
 
 struct A {
 	double a = 0.0;
@@ -38,7 +39,7 @@ struct A {
 
 int main( ) {
 	auto const func = []( int b ) {
-		//sleep( 5 );
+		// sleep( 5 );
 		return b * b;
 	};
 
@@ -67,7 +68,7 @@ int main( ) {
 	};
 
 	auto f3 = daw::process::async( func2, 5 );
-	auto f4= daw::process::async( func2, 10 );
+	auto f4 = daw::process::async( func2, 10 );
 
 	f3.get( ).show( );
 	f4.get( ).show( );

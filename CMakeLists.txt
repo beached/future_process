@@ -38,7 +38,8 @@ set( SOURCE_FOLDER "src" )
 include_directories( ${HEADER_FOLDER} )
 
 set( HEADER_FILES
-	${HEADER_FOLDER}/daw/future_process.h
+	${HEADER_FOLDER}/daw/daw_future_process.h
+	${HEADER_FOLDER}/daw/daw_process.h
 	${HEADER_FOLDER}/daw/daw_shared_memory.h
 	${HEADER_FOLDER}/daw/daw_semaphore.h
 )
