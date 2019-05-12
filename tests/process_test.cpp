@@ -43,7 +43,7 @@ int main( ) {
 	puts( "Child complete\n" );
 
 	proc = daw::process::fork_process(
-	  [&sem]( int t ) {
+	  []( int t ) {
 		  sleep( t );
 		  throw std::exception( );
 	  },
