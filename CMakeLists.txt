@@ -43,6 +43,7 @@ set( HEADER_FILES
 	${HEADER_FOLDER}/daw/daw_process.h
 	${HEADER_FOLDER}/daw/daw_shared_memory.h
 	${HEADER_FOLDER}/daw/daw_semaphore.h
+	${HEADER_FOLDER}/daw/daw_string_channel.h
 )
 
 add_custom_target( check COMMAND ${CMAKE_CTEST_COMMAND} )
@@ -79,6 +80,14 @@ target_link_libraries( channel_test_bin uv )
 add_test( channel_test channel_test_bin )
 add_dependencies( check channel_test_bin )
 add_dependencies( full channel_test_bin )
+
+#add_executable( string_channel_test_bin EXCLUDE_FROM_ALL ${HEADER_FILES} ${TEST_FOLDER}/string_channel_test.cpp )
+add_executable( string_channel_test_bin ${HEADER_FILES} ${TEST_FOLDER}/string_channel_test.cpp )
+add_dependencies( string_channel_test_bin dependency_stub )
+target_link_libraries( string_channel_test_bin uv )
+add_test( string_channel_test string_channel_test_bin )
+add_dependencies( check string_channel_test_bin )
+add_dependencies( full string_channel_test_bin )
 
 install( DIRECTORY ${HEADER_FOLDER}/daw/ DESTINATION include/daw/ )
 

@@ -74,7 +74,7 @@ namespace daw::process {
 			}
 		}
 
-		~fork_process( ) noexcept {
+		inline ~fork_process( ) noexcept {
 			if( !m_is_detached ) {
 				join( );
 			}
@@ -90,10 +90,6 @@ namespace daw::process {
 
 		constexpr bool joinable( ) const noexcept {
 			return m_pid > 0;
-		}
-
-		explicit constexpr operator bool( ) const noexcept {
-			return joinable( );
 		}
 	};
 } // namespace daw::process

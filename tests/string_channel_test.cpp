@@ -22,29 +22,32 @@
 
 #include <cassert>
 
-#include "daw/daw_channel.h"
+
+#include <daw/daw_benchmark.h>
+
+#include "daw/daw_string_channel.h"
 #include "daw/daw_process.h"
 
 extern bool can_run;
 bool can_run = true;
 
 int main( ) {
-	auto chan = daw::process::channel<unsigned int>( );
+	auto chan = daw::process::string_channel( );
+	static std::string const message = "This is a long string test, how about that eh! Hello World.";
 
 	auto proc = daw::process::fork_process( [&chan]( unsigned int t ) {
 		while( can_run ) {
 			puts( "child: sleeping\n" );
 			sleep( t );
 			puts( "child: awake\n" );
-			chan.write( t );
+			chan.write( message );
 		}
 	}, 2 );
 
 	while( can_run ) {
 		puts( "parent: awaiting child\n" );
 		auto val = chan.read( );
-		Unused( val );
-		assert( val == 2 );
-		puts( "parent: got child's post\n" );
+		std::cout << "parent: message from child '" << val << "'\n";
+		daw::expecting( val, message );
 	}
 }
