@@ -13,3 +13,5 @@ auto f2 = a( 10 );
 
 return f1.get( ) + f2.get( );
 ```
+
+The above example will create two child processes.
