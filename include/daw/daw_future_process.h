@@ -43,17 +43,18 @@ namespace daw::process {
 
 		return std::async( std::launch::async,
 		                   [&]( ) -> Ret {
-			                   auto chan = daw::process::channel<Ret>( );
+			                   auto mem = daw::process::shared_memory<Ret>( );
+			                   auto sem = daw::process::semaphore( );
 			                   auto proc = daw::process::fork_process( [&]( ) {
-				                   chan.write( std::invoke(
+				                   mem.write( std::invoke(
 				                     *func, std::forward<Arguments>( arguments )... ) );
+				                   sem.post( );
 			                   } );
 
 			                   proc.join( );
-			                   auto result = chan.try_read( );
 			                   daw::exception::daw_throw_on_false<std::runtime_error>(
-			                     result, "Error running callable" );
-			                   return *result;
+			                     sem.try_wait( ), "Error running callable" );
+			                   return mem.read( );
 		                   }
 
 		);

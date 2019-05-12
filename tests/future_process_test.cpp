@@ -23,7 +23,10 @@
 #include <iostream>
 #include <numeric>
 
+#include <daw/daw_benchmark.h>
+
 #include "daw/daw_future_process.h"
+
 
 struct A {
 	double a = 0.0;
@@ -70,4 +73,12 @@ int main( ) {
 
 	f3.get( ).show( );
 	f4.get( ).show( );
+
+	using result_t = std::variant<int, double, A>;
+
+	auto f5 = daw::process::async( []( ) -> result_t { return 5.5; } );
+
+	auto r5 = f5.get( );
+	daw::expecting( r5.index( ) == 1 );
+	std::cout << std::get<1>( r5 ) << '\n';
 }
