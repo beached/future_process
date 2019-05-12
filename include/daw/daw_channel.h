@@ -20,34 +20,54 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include <daw/daw_process.h>
-#include <daw/daw_semaphore.h>
+#pragma once
 
-extern bool can_run;
+#include <optional>
 
-bool can_run = true;
+#include "daw_semaphore.h"
+#include "daw_shared_memory.h"
 
-int main( ) {
-	auto sem_a = daw::process::semaphore( );
-	auto sem_b = daw::process::semaphore( );
+namespace daw::process {
+	template<typename T>
+	class channel {
+		daw::process::semaphore m_can_write{};
+		daw::process::semaphore m_can_read{};
+		daw::process::shared_memory<T> m_data{};
 
-	auto proc = daw::process::fork_process( [&]( unsigned int t ) {
-		while( can_run ) {
-			puts( "child: sleeping\n" );
-			sleep( t );
-			puts( "child: awake\n" );
-			sem_b.post( );
-			puts( "child: awaiting parent acknowledgement\n" );
-			sem_a.wait( );
-			puts( "child: got parent's acknowledgement\n" );
+	public:
+		channel( ) noexcept {
+			m_can_write.post( );
 		}
-	}, 2 );
 
-	while( can_run ) {
-		puts( "parent: awaiting child\n" );
-		sem_b.wait( );
-		puts( "parent: got child's post\n" );
-		sem_a.post( );
-		puts( "parent: sent child's post\n" );
-	}
-}
+		void write( T const &value ) noexcept {
+			m_can_write.wait( );
+			m_data.write( value );
+			m_can_read.post( );
+		}
+
+		bool try_write( T const &value ) noexcept {
+			if( m_can_write.try_wait( ) ) {
+				m_data.write( value );
+				m_can_read.post( );
+				return true;
+			}
+			return false;
+		}
+
+		T read( ) noexcept {
+			m_can_read.wait( );
+			auto result = m_data.read( );
+			m_can_write.post( );
+			return result;
+		}
+
+		std::optional<T> try_read( ) noexcept {
+			if( m_can_read.try_wait( ) ) {
+				auto result = m_data.read( );
+				m_can_write.post( );
+				return result;
+			}
+			return std::nullopt;
+		}
+	};
+} // namespace daw::process

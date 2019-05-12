@@ -45,7 +45,7 @@ namespace daw::process {
 		  std::launch::async,
 		  [func = daw::mutable_capture( std::forward<Function>( func ) )](
 		    auto &&... args ) -> Ret {
-			  auto shared_result = daw::shared_memory<Ret>( );
+			  auto shared_result = daw::process::shared_memory<Ret>( );
 			  auto sem = daw::process::semaphore( );
 
 			  auto pid = fork( );

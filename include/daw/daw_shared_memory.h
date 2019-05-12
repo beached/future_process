@@ -25,7 +25,7 @@
 #include <string>
 #include <sys/mman.h>
 
-namespace daw {
+namespace daw::process {
 	template<typename T>
 	class shared_memory {
 		volatile char *m_data;
@@ -93,4 +93,4 @@ namespace daw {
 			memcpy( ptr, &value, sizeof( T ) );
 		}
 	};
-} // namespace daw
+} // namespace daw::process

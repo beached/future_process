@@ -38,6 +38,7 @@ set( SOURCE_FOLDER "src" )
 include_directories( ${HEADER_FOLDER} )
 
 set( HEADER_FILES
+	${HEADER_FOLDER}/daw/daw_channel.h
 	${HEADER_FOLDER}/daw/daw_future_process.h
 	${HEADER_FOLDER}/daw/daw_process.h
 	${HEADER_FOLDER}/daw/daw_shared_memory.h
@@ -70,6 +71,14 @@ target_link_libraries( semaphore_test_bin uv )
 add_test( semaphore_test semaphore_test_bin )
 add_dependencies( check semaphore_test_bin )
 add_dependencies( full semaphore_test_bin )
+
+#add_executable( channel_test_bin EXCLUDE_FROM_ALL ${HEADER_FILES} ${TEST_FOLDER}/channel_test.cpp )
+add_executable( channel_test_bin ${HEADER_FILES} ${TEST_FOLDER}/channel_test.cpp )
+add_dependencies( channel_test_bin dependency_stub )
+target_link_libraries( channel_test_bin uv )
+add_test( channel_test channel_test_bin )
+add_dependencies( check channel_test_bin )
+add_dependencies( full channel_test_bin )
 
 install( DIRECTORY ${HEADER_FOLDER}/daw/ DESTINATION include/daw/ )
 
