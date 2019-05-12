@@ -92,3 +92,28 @@ while( true ) {
 	puts( "parent: got child's post\n" );
 }
 ```
+
+## String Channel
+
+Similar to channel but for transferring string like things
+
+```cpp
+auto chan = daw::process::string_channel( );
+static std::string const message = "This is a long string test, how about that eh! Hello World.";
+
+auto proc = daw::process::fork_process( [&chan]( unsigned int t ) {
+    while( true ) {
+        puts( "child: sleeping\n" );
+        sleep( t );
+        puts( "child: awake\n" );
+        chan.write( message );
+    }
+}, 2 );
+
+while( true ) {
+    puts( "parent: awaiting child\n" );
+    auto val = chan.read( );
+    std::cout << "parent: message from child '" << val << "'\n";
+    assert( val == message );
+}
+```
