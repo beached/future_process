@@ -30,6 +30,9 @@
 namespace daw::process {
 	template<typename T>
 	class channel {
+		static_assert( std::is_trivially_copyable_v<T> );
+		static_assert( std::is_default_constructible_v<T> );
+		
 		daw::process::semaphore m_can_write{};
 		daw::process::semaphore m_can_read{};
 		daw::process::shared_memory<T> m_data{};

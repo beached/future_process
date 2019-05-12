@@ -1,3 +1,4 @@
+A set of process/ipc classes and functions to allow for a C++ like experience.  So far tested on Linux(gcc 8.3.0/clang 8.0) and Mac(Apple Clang 10.0.1/gcc 9.1)
 ## Future Process
 
 Create processes and return data via a ```std::future```.  With the only restriction being that the return type is trivial and that exceptions do not traverse the processes.  If an exception is thrown, a runtime_error will be thrown.
