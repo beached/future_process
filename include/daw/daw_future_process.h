@@ -32,8 +32,8 @@
 #include <daw/daw_traits.h>
 #include <daw/daw_utility.h>
 
-#include "daw_semaphore.h"
-#include "daw_shared_memory.h"
+#include "daw_channel.h"
+#include "daw_process.h"
 
 namespace daw::process {
 	template<typename Function, typename... Arguments,
@@ -41,32 +41,21 @@ namespace daw::process {
 	           daw::remove_cvref_t<std::invoke_result_t<Function, Arguments...>>>
 	std::future<Ret> async( Function &&func, Arguments &&... arguments ) {
 
-		return std::async(
-		  std::launch::async,
-		  [func = daw::mutable_capture( std::forward<Function>( func ) )](
-		    auto &&... args ) -> Ret {
-			  auto shared_result = daw::process::shared_memory<Ret>( );
-			  auto sem = daw::process::semaphore( );
+		return std::async( std::launch::async,
+		                   [&]( ) -> Ret {
+			                   auto chan = daw::process::channel<Ret>( );
+			                   auto proc = daw::process::fork_process( [&]( ) {
+				                   chan.write( std::invoke(
+				                     *func, std::forward<Arguments>( arguments )... ) );
+			                   } );
 
-			  auto pid = fork( );
-			  daw::exception::daw_throw_on_true<std::runtime_error>(
-			    pid < 0, "Error forking" );
+			                   proc.join( );
+			                   auto result = chan.try_read( );
+			                   daw::exception::daw_throw_on_false<std::runtime_error>(
+			                     result, "Error running callable" );
+			                   return *result;
+		                   }
 
-			  if( pid == 0 ) {
-				  // child
-				  shared_result.write(
-				    std::invoke( *func, std::forward<decltype( args )>( args )... ) );
-				  sem.post( );
-				  exit( 0 );
-			  } else {
-				  // parent
-				  int status = 0;
-				  waitpid( pid, &status, WUNTRACED );
-				  daw::exception::daw_throw_on_false<std::runtime_error>(
-				    sem.try_wait( ), "Error running callable" );
-				  return shared_result.read( );
-			  }
-		  },
-		  std::forward<Arguments>( arguments )... );
+		);
 	}
 } // namespace daw::process
