@@ -41,6 +41,7 @@ int main( ) {
 	while( can_run ) {
 		puts( "parent: awaiting child\n" );
 		auto val = chan.read( );
+		Unused( val );
 		assert( val == 2 );
 		puts( "parent: got child's post\n" );
 	}

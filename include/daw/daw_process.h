@@ -48,10 +48,8 @@ namespace daw::process {
 			daw::exception::daw_throw_on_true<std::runtime_error>( m_pid < 0,
 			                                                       "Error forking" );
 			if( m_pid == 0 ) {
-				try {
-					(void)std::invoke( std::forward<Function>( func ),
-					                   std::forward<Args>( args )... );
-				} catch( ... ) { exit( 1 ); }
+				(void)std::invoke( std::forward<Function>( func ),
+				                   std::forward<Args>( args )... );
 				exit( 0 );
 			}
 		}
@@ -61,6 +59,7 @@ namespace daw::process {
 
 		constexpr fork_process( fork_process &&other ) noexcept
 		  : m_pid( std::exchange( other.m_pid, 0 ) ) {}
+
 		constexpr fork_process &operator=( fork_process &&rhs ) noexcept {
 			if( this != &rhs ) {
 				m_pid = std::exchange( rhs.m_pid, 0 );
