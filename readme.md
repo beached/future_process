@@ -65,3 +65,27 @@ while( true ) {
 	puts( "parent: sent child's post\n" );
 }
 ```
+
+## Channel
+
+A way to send and ackknowledge a message has been both sent and recieved.
+
+```cpp
+auto chan = daw::process::channel<unsigned int>( );
+
+auto proc = daw::process::fork_process( [&chan]( unsigned int t ) {
+	while( true ) {
+		puts( "child: sleeping\n" );
+		sleep( t );
+		puts( "child: awake\n" );
+		chan.write( t );
+	}
+}, 2 );
+
+while( true ) {
+	puts( "parent: awaiting child\n" );
+	auto val = chan.read( );
+	assert( val == 2 );
+	puts( "parent: got child's post\n" );
+}
+```
