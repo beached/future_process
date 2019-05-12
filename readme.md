@@ -8,7 +8,7 @@ Create processes and return data via a ```std::future```.  With the only restric
 auto func = []( int b ) {
 	std::cout << "process\n";
 	return b * b;
-} );
+};
 
 std::future<int> f1 = daw::process::async( func, 5 );
 std::future<int> f2 = daw::process::async( func, 10 );
