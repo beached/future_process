@@ -24,25 +24,51 @@
 #include <numeric>
 
 #include "daw/future_process.h"
+#include "daw/daw_read_file.h"
+
+struct A {
+	double a = 0.0;
+	float b = 0.0;
+	unsigned long long c = 0;
+
+	void show( ) const {
+		std::cout << "a: " << a << " b: " << b << " c: " << c << '\n';
+	}
+};
 
 int main( ) {
-	auto const a = []( int b ) {
-		sleep( 5 );
+	auto const func = []( int b ) {
+		//sleep( 5 );
 		return b * b;
 	};
 
-	auto f1 = daw::process( a, 5 );
-	auto f2 = daw::process( a, 10 );
+	auto f1 = daw::process( func, 5 );
+	auto f2 = daw::process( func, 10 );
 
 	std::cout << f1.get( ) + f2.get( ) << '\n';
 
 	std::vector<std::future<int>> futs{};
 
 	for( size_t n = 0; n < 100; ++n ) {
-		futs.push_back( daw::process( a, n ) );
+		futs.push_back( daw::process( func, n ) );
 	}
 	auto sums = std::accumulate( futs.begin( ), futs.end( ), 0,
 	                             []( int s, auto &f ) { return s + f.get( ); } );
 
 	std::cout << "sums: " << sums << '\n';
+
+	auto const func2 = []( int arg ) {
+		A result{};
+		result.a = arg * 1.23456;
+		result.b = arg * 10.0f * 1.23456f;
+		result.c = arg * 100.0 * 123456;
+
+		return result;
+	};
+
+	auto f3 = daw::process( func2, 5 );
+	auto f4= daw::process( func2, 10 );
+
+	f3.get( ).show( );
+	f4.get( ).show( );
 }

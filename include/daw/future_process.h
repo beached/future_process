@@ -71,5 +71,5 @@ namespace daw {
 			  }
 		  },
 		  std::forward<Arguments>( arguments )... );
-	};
+	}
 } // namespace daw
