@@ -37,17 +37,17 @@
 #include "daw_semaphore.h"
 #include "daw_shared_memory.h"
 
-namespace daw {
-	template<typename Function, typename... Arguments>
-	auto process( Function &&func, Arguments &&... arguments ) -> std::future<
-	  daw::remove_cvref_t<std::invoke_result_t<Function, Arguments...>>> {
-
-		using Ret =
-		  daw::remove_cvref_t<std::invoke_result_t<Function, Arguments...>>;
+namespace daw::process {
+	template<typename Function, typename... Arguments,
+	         typename Ret =
+	           daw::remove_cvref_t<std::invoke_result_t<Function, Arguments...>>>
+	std::future<Ret> async( Function &&func, Arguments &&... arguments ) {
 
 		return std::async(
 		  std::launch::async,
-		  [func = daw::mutable_capture( func )]( auto &&... args ) -> Ret {
+		  [func = daw::mutable_capture( std::forward<Function>( func ) )](
+		    auto &&... args ) -> Ret {
+
 			  auto shared_result = daw::shared_memory_t<Ret>( );
 			  auto sem = daw::semaphore_t( );
 
@@ -72,4 +72,4 @@ namespace daw {
 		  },
 		  std::forward<Arguments>( arguments )... );
 	}
-} // namespace daw
+} // namespace daw::process

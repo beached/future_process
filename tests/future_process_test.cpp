@@ -42,15 +42,15 @@ int main( ) {
 		return b * b;
 	};
 
-	auto f1 = daw::process( func, 5 );
-	auto f2 = daw::process( func, 10 );
+	auto f1 = daw::process::async( func, 5 );
+	auto f2 = daw::process::async( func, 10 );
 
 	std::cout << f1.get( ) + f2.get( ) << '\n';
 
 	std::vector<std::future<int>> futs{};
 
 	for( size_t n = 0; n < 100; ++n ) {
-		futs.push_back( daw::process( func, n ) );
+		futs.push_back( daw::process::async( func, n ) );
 	}
 	auto sums = std::accumulate( futs.begin( ), futs.end( ), 0,
 	                             []( int s, auto &f ) { return s + f.get( ); } );
@@ -66,8 +66,8 @@ int main( ) {
 		return result;
 	};
 
-	auto f3 = daw::process( func2, 5 );
-	auto f4= daw::process( func2, 10 );
+	auto f3 = daw::process::async( func2, 5 );
+	auto f4= daw::process::async( func2, 10 );
 
 	f3.get( ).show( );
 	f4.get( ).show( );

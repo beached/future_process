@@ -8,10 +8,10 @@ auto func = []( int b ) {
 	return b * b;
 } );
 
-auto f1 = daw::process( func, 5 );
-auto f2 = daw::process( func, 10 );
+auto f1 = daw::process::async( func, 5 );
+auto f2 = daw::process::async( func, 10 );
 
 return f1.get( ) + f2.get( );
 ```
 
-The above example will create two child processes.
+The above example will create two child processes.  async( Function, Args... ) returns a std::future.
