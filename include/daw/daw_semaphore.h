@@ -22,6 +22,7 @@
 
 #pragma once
 
+#include <fcntl.h>
 #include <semaphore.h>
 
 #include <daw/daw_random.h>
