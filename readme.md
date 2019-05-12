@@ -10,8 +10,8 @@ auto func = []( int b ) {
 	return b * b;
 } );
 
-auto f1 = daw::process::async( func, 5 );
-auto f2 = daw::process::async( func, 10 );
+std::future<int> f1 = daw::process::async( func, 5 );
+std::future<int> f2 = daw::process::async( func, 10 );
 
 return f1.get( ) + f2.get( );
 ```
