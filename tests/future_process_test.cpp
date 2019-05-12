@@ -26,20 +26,20 @@
 #include "daw/future_process.h"
 
 int main( ) {
-	auto a = daw::process::future_process<int( int )>( []( int b ) {
+	auto const a = []( int b ) {
 		sleep( 5 );
 		return b * b;
-	} );
+	};
 
-	auto f1 = a( 5 );
-	auto f2 = a( 10 );
+	auto f1 = daw::process( a, 5 );
+	auto f2 = daw::process( a, 10 );
 
 	std::cout << f1.get( ) + f2.get( ) << '\n';
 
 	std::vector<std::future<int>> futs{};
 
 	for( size_t n = 0; n < 100; ++n ) {
-		futs.push_back( a( n ) );
+		futs.push_back( daw::process( a, n ) );
 	}
 	auto sums = std::accumulate( futs.begin( ), futs.end( ), 0,
 	                             []( int s, auto &f ) { return s + f.get( ); } );
