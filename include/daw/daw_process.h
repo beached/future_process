@@ -34,6 +34,7 @@ namespace daw::process {
 	template<bool wait_on_pid = true>
 	class fork_process {
 		pid_t m_pid = -1;
+		bool m_is_detached = !wait_on_pid;
 
 	public:
 		constexpr fork_process( ) noexcept = default;
@@ -64,17 +65,29 @@ namespace daw::process {
 			return *this;
 		}
 
-		void wait( ) const noexcept {
-			int status = 0;
-			waitpid( m_pid, &status, WUNTRACED );
+		constexpr void join( ) noexcept {
+			if( auto tmp = std::exchange( m_pid, -1 ); tmp > 0 ) {
+				int status = 0;
+				waitpid( tmp, &status, WUNTRACED );
+			}
 		}
 
 		~fork_process( ) noexcept {
-			if( auto tmp = std::exchange( m_pid, -1 ) > 0 ) {
-				if( wait_on_pid ) {
-					wait( );
-				}
+			if( !m_is_detached ) {
+				join( );
 			}
+		}
+
+		constexpr void detach( ) noexcept {
+			m_is_detached = true;
+		}
+
+		constexpr bool joinable( ) const noexcept {
+			return m_pid > 0;
+		}
+
+		explicit constexpr operator bool( ) const noexcept {
+			return joinable( );
 		}
 	};
 } // namespace daw::process

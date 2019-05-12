@@ -38,7 +38,7 @@ int main( ) {
 	  5 );
 
 	puts( "Waiting on child\n" );
-	proc.wait( );
+	proc.join( );
 	assert( sem.try_wait( ) );
 	puts( "Child complete\n" );
 
@@ -50,7 +50,7 @@ int main( ) {
 	  2 );
 
 	puts( "Waiting on child\n" );
-	proc.wait( );
+	proc.join( );
 	assert( !sem.try_wait( ) );
 	puts( "Child successfully errored\n" );
 }
