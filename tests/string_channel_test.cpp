@@ -33,7 +33,7 @@ extern bool can_run;
 bool can_run = true;
 
 int main( ) {
-	auto chan = daw::process::string_channel( );
+	auto chan = daw::process::string_channel<>( );
 	static constexpr std::string_view message =
 	  "This is a long string test, how about that eh! Hello World.";
 
