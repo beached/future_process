@@ -44,6 +44,8 @@ namespace daw::process {
 	struct future_process<Ret( Args... )> {
 		std::function<Ret( Args... )> m_func{};
 
+		future_process( ) noexcept = default;
+
 		template<typename Function,
 		         daw::enable_if_t<!std::is_same_v<
 		           future_process, daw::remove_cvref_t<Function>>> = nullptr>
