@@ -6,10 +6,10 @@ externalproject_add(
     SOURCE_DIR "${CMAKE_BINARY_DIR}/dependencies/header_libraries"
     GIT_TAG "master"
     INSTALL_DIR "${CMAKE_BINARY_DIR}/install"
-    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/install -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}
+    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/install
 )
 
 include_directories( SYSTEM "${CMAKE_BINARY_DIR}/install/include" )
-link_directories( "${CMAKE_BINARY_DIR}/install/lib" )
+#link_directories( "${CMAKE_BINARY_DIR}/install/lib" )
 
 set( DEP_PROJECT_DEPS header_libraries_prj )

@@ -1,6 +1,6 @@
 // The MIT License (MIT)
 //
-// Copyright (c) 2018 Darrell Wright
+// Copyright (c) 2019 Darrell Wright
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files( the "Software" ), to
@@ -22,224 +22,69 @@
 
 #pragma once
 
-#include <array>
 #include <cstddef>
-#include <cstring>
+#include <functional>
+#include <future>
+#include <sys/wait.h>
+#include <unistd.h>
 
 #include <daw/cpp_17.h>
-#include <daw/daw_exception.h>
-#include <daw/daw_expected.h>
-#include <daw/daw_traits.h>
+#include <daw/daw_parser_helper_sv.h>
+#include <daw/daw_random.h>
+#include <daw/daw_utility.h>
 
-#include "ipc_pipe.h"
+#include "daw_semaphore.h"
+#include "daw_shared_memory.h"
 
-namespace daw {
-	// Ensure that T is trivially copiable(should be memcpy'able) and not a
-	// pointer
+namespace daw::process {
 	template<typename T>
-	struct is_future_transferrable
-	  : std::bool_constant<daw::is_trivially_copyable_v<T> and
-	                       !daw::is_pointer_v<T> &&
-	                       !daw::is_member_pointer_v<T>> {};
+	struct future_process;
 
-	template<>
-	struct is_future_transferrable<void> : std::true_type {};
+	template<typename Ret, typename... Args>
+	struct future_process<Ret( Args... )> {
+		std::function<Ret( Args... )> m_func{};
 
-	template<typename T>
-	CXINLINE bool is_future_transferrable_v = is_future_transferrable<T>::value;
+		template<typename Function,
+		         daw::enable_if_t<!std::is_same_v<
+		           future_process, daw::remove_cvref_t<Function>>> = nullptr>
+		future_process( Function &&func )
+		  : m_func( std::forward<Function>( func ) ) {}
 
-	template<typename T>
-	constexpr bool is_future_transferrable_test( ) noexcept {
-		static_assert(
-		  is_future_transferrable_v<T>,
-		  "Type is not trivially copyable or a true_type specialization of "
-		  "is_future_transferrable.  It may not be safe to send over IPC" );
-		return true;
-	}
-
-	template<typename T>
-	struct ipc_promise {
-		static_assert( is_future_transferrable_test<T>( ) );
-		daw::expected_t<T> m_value{};
-		pipe_t m_pipe{};
-
-		ipc_promise( ) = default;
-
-		explicit operator bool( ) const noexcept {
-			return !m_value.has_exception( );
+		template<typename Function,
+		         daw::enable_if_t<!std::is_same_v<
+		           future_process, daw::remove_cvref_t<Function>>> = nullptr>
+		future_process &operator=( Function &&func ) {
+			m_func = std::forward<Function>( func );
 		}
 
-		T const &get( ) {
-			if( m_value.empty( ) ) {
-				receive( *this );
-			}
-			return m_value.get( );
+		template<typename... Arguments>
+		std::future<Ret> operator( )( Arguments &&... arguments ) {
+
+			return std::async(
+			  std::launch::async,
+			  [m_func = daw::mutable_capture( m_func )]( Args... args ) -> Ret {
+				  auto shared_result = daw::shared_memory_t<Ret>( );
+				  auto sem = daw::semaphore_t( );
+
+				  auto pid = fork( );
+				  daw::exception::daw_throw_on_true<std::runtime_error>(
+				    pid < 0, "Error forking" );
+
+				  if( pid == 0 ) {
+					  // child
+					  shared_result.write( daw::invoke( *m_func, std::move( args )... ) );
+					  sem.post( );
+					  exit( 0 );
+				  } else {
+					  // parent
+						int status = 0;
+					  waitpid( pid, &status, WUNTRACED );
+					  daw::exception::daw_throw_on_false<std::runtime_error>(
+					    sem.try_wait( ), "Error running callable" );
+					  return shared_result.read( );
+				  }
+			  },
+			  std::forward<Arguments>( arguments )... );
 		}
 	};
-
-	template<>
-	struct ipc_promise<void> {
-		expected_t<void> m_value{};
-		pipe_t m_pipe{};
-
-		ipc_promise( ) = default;
-
-		explicit operator bool( ) const noexcept;
-		void get( );
-	};
-
-	struct binary_local_t {};
-
-	static constexpr binary_local_t const binary_local = {};
-
-	template<size_t N>
-	using msg_t = std::array<char, N>;
-
-	template<typename T>
-	auto serialize( binary_local_t, T &&value ) noexcept {
-		msg_t<sizeof( remove_cvref_t<T> )> result = {};
-		memcpy( result.data( ), &value, sizeof( remove_cvref_t<T> ) );
-		return result;
-	}
-
-	template<typename T, size_t N>
-	T deserialize( binary_local_t, msg_t<N> msg ) noexcept {
-		static_assert( sizeof( T ) == N );
-		T result{};
-		memcpy( &result, msg.data( ), msg.size( ) );
-		return result;
-	}
-
-	template<typename T, typename Arg>
-	void send( ipc_promise<T> &promise, Arg &&arg ) noexcept {
-		static_assert( is_future_transferrable_test<remove_cvref_t<Arg>>( ) );
-		if( !promise ) {
-			return;
-		}
-		auto const msg = serialize( binary_local, std::forward<Arg>( arg ) );
-		if( promise.m_pipe.write( msg.data( ), msg.size( ) ) < 0 ) {
-			promise.m_value.set_exception(
-			  daw::exception::make_exception_ptr<std::runtime_error>(
-			    std::strerror( errno ) ) );
-		}
-	}
-
-	template<typename T, typename Arg, typename... Args>
-	void send_args( ipc_promise<T> &promise, Arg &&arg,
-	                Args &&... args ) noexcept {
-		if( !promise ) {
-			return;
-		}
-		auto msg = serialize( binary_local, std::tuple<remove_cvref_t<Args>...>(
-		                                      std::forward<Args>( args )... ) );
-
-		if( promise.m_pipe.write( msg.data( ), msg.size( ) ) < 0 ) {
-			promise.m_value.set_exception(
-			  daw::exception::make_exception_ptr<std::runtime_error>(
-			    std::strerror( errno ) ) );
-		}
-	}
-
-	void send( ipc_promise<void> &promise ) noexcept;
-
-	template<typename T>
-	void receive( ipc_promise<T> &promise ) noexcept {
-		if( !promise ) {
-			return;
-		}
-		std::array<char, sizeof( T )> buff{};
-		intmax_t pos = 0;
-		intmax_t num_read;
-		while( ( num_read = promise.m_pipe.read(
-		           buff.data( ) + pos,
-		           buff.size( ) - static_cast<size_t>( pos ) ) ) >= 0 ) {
-			pos += num_read;
-			if( pos >= static_cast<intmax_t>( sizeof( T ) ) ) {
-				break;
-			}
-		}
-		if( num_read < 0 ) {
-			promise.m_value.set_exception(
-			  daw::exception::make_exception_ptr<std::runtime_error>(
-			    std::strerror( errno ) ) );
-			return;
-		}
-
-		promise.m_value = *reinterpret_cast<T const *>( buff.data( ) );
-	}
-
-	template<typename... Args, typename T>
-	std::tuple<Args...> receive_args( ipc_promise<T> &promise ) noexcept {
-		if( !promise ) {
-			return {};
-		}
-		std::tuple<remove_cvref_t<Args>...> result{};
-		intmax_t pos = 0;
-		intmax_t num_read;
-		while( ( num_read = promise.m_pipe.read(
-		           &result + pos,
-		           sizeof( result ) - static_cast<size_t>( pos ) ) ) >= 0 ) {
-			pos += num_read;
-			if( static_cast<size_t>( pos ) >= sizeof( T ) ) {
-				break;
-			}
-		}
-		if( num_read < 0 ) {
-			promise.m_value.set_exception(
-			  daw::exception::make_exception_ptr<std::runtime_error>(
-			    std::strerror( errno ) ) );
-			return {};
-		}
-		return result;
-	}
-
-	void receive( ipc_promise<void> &promise ) noexcept;
-
-	template<typename Callable, typename... CallableArgs>
-	class future_process {
-		static_assert( ( is_future_transferrable_test<CallableArgs>( ) && ... ) );
-
-		Callable m_callable;
-
-		using result_t = remove_cvref_t<decltype(
-		  m_callable( std::declval<CallableArgs>( )... ) )>;
-
-	public:
-		constexpr future_process( Callable &&c )
-		  : m_callable( std::forward<Callable>( c ) ) {}
-
-		template<typename... Args>
-		constexpr ipc_promise<result_t> operator( )( Args &&... args ) {
-			auto result = ipc_promise<result_t>( );
-			if( !result ) {
-				return result;
-			}
-
-			auto const pid = fork( );
-			if( pid < 0 ) {
-				result.m_value.set_exception(
-				  daw::exception::make_exception_ptr<std::runtime_error>(
-				    std::strerror( errno ) ) );
-				return result;
-			}
-			if( pid >= 0 ) {
-				// parent
-				send_args( result, std::tuple<daw::remove_cvref_t<Args>...>(
-				                     std::forward<Args>( args )... ) );
-				return result;
-			}
-			// child
-			if( !result ) {
-				return result;
-			}
-			auto fargs = receive_args<CallableArgs...>( result );
-			send( result, daw::apply( m_callable, fargs ) );
-			exit( result.m_value.has_value( ) ? 0 : -1 );
-		}
-	};
-
-	template<typename... Args, typename Callable>
-	auto make_future_process( Callable &&c ) {
-		return future_process<Callable, Args...>( std::forward<Callable>( c ) );
-	}
-} // namespace daw
+} // namespace daw::process

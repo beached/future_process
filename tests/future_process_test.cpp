@@ -1,6 +1,6 @@
 // The MIT License (MIT)
 //
-// Copyright (c) 2018 Darrell Wright
+// Copyright (c) 2019 Darrell Wright
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files( the "Software" ), to
@@ -20,24 +20,16 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+#include "daw/future_process.h"
 #include <iostream>
 
-#include "daw/future_process.h"
-
-struct done_t {
-	static constexpr char msg[] = "Done";
-	unsigned int done = 0xDEAD'BEEF;
-};
-
 int main( ) {
-	auto f = daw::make_future_process<void>( []( unsigned int i ) {
-		sleep( i );
-		std::cout << "child" << i <<'\n';
+	auto a = daw::process::future_process<int( int )>( []( int b ) {
+		std::cout << "process\n";
+		return b * b;
 	} );
 
-	auto p = f( 4000 );
-	auto msg = p.get( );
+	auto f = a( 5 );
 
-	std::cout << msg.done << ' ' << '\n';
-	return 0;
+	std::cout << f.get( ) << '\n';
 }

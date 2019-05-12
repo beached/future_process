@@ -1,16 +1,8 @@
 cmake_minimum_required( VERSION 2.8.12 )
 
-project( function_stream_prj )
+project( future_process )
 
-#find_package( Boost 1.58.0 COMPONENTS system iostreams filesystem regex unit_test_framework REQUIRED )
-
-#enable_testing( )
-#add_definitions( -DBOOST_ALL_NO_LIB )
-
-find_package( Threads REQUIRED )
-
-set( CMAKE_CXX_STANDARD 17 CACHE STRING "The C++ standard whose features are requested.")
-add_definitions( -DBOOST_TEST_DYN_LINK -DBOOST_ALL_NO_LIB -DBOOST_ALL_DYN_LINK )
+enable_testing( )
 
 include( "${CMAKE_SOURCE_DIR}/dependent_projects/CMakeListsCompiler.txt" )
 
@@ -20,6 +12,8 @@ set( DEP_ROOT_DIR_BASE "${CMAKE_SOURCE_DIR}/dependent_projects/build" )
 if( "${CMAKE_BUILD_TYPE}" STREQUAL "Debug" )
 	set( DEP_ROOT_DIR "${DEP_ROOT_DIR_BASE}/debug" )
 elseif( "${CMAKE_BUILD_TYPE}" STREQUAL "Release" )
+	set( DEP_ROOT_DIR "${DEP_ROOT_DIR_BASE}/release" )
+elseif( "${CMAKE_BUILD_TYPE}" STREQUAL "" )
 	set( DEP_ROOT_DIR "${DEP_ROOT_DIR_BASE}/release" )
 endif( )
 
@@ -38,40 +32,27 @@ else( )
 endif( )
 
 set( HEADER_FOLDER "include" )
-set( SOURCE_FOLDER "src" )
 set( TEST_FOLDER "tests" )
+set( SOURCE_FOLDER "src" )
 
-include_directories( SYSTEM "${CMAKE_BINARY_DIR}/install/include" )
 include_directories( ${HEADER_FOLDER} )
 
-include_directories( SYSTEM ${Boost_INCLUDE_DIRS} )
-
-link_directories( ${Boost_LIBRARY_DIRS} )
-
 set( HEADER_FILES
-	${HEADER_FOLDER}/daw/ipc_pipe.h
 	${HEADER_FOLDER}/daw/future_process.h
+	${HEADER_FOLDER}/daw/daw_shared_memory.h
+	${HEADER_FOLDER}/daw/daw_semaphore.h
 )
 
-set( SOURCE_FILES
-	${SOURCE_FOLDER}/ipc_pipe.cpp
-	${SOURCE_FOLDER}/future_process.cpp
-)
-
-add_definitions( -DBOOST_TEST_DYN_LINK -DBOOST_ALL_NO_LIB -DBOOST_ALL_DYN_LINK )
-
-#set( CMAKE_CTEST_COMMAND ctest -V )
 add_custom_target( check COMMAND ${CMAKE_CTEST_COMMAND} )
+add_custom_target( full )
 
-add_library( future_process_lib ${HEADER_FILES} ${SOURCE_FILES} )
-target_link_libraries( future_process_lib ${Boost_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} )
-add_dependencies( future_process_lib dependency_stub )
-
-add_executable( future_process_test_bin EXCLUDE_FROM_ALL ${TEST_FOLDER}/future_process_test.cpp )
-target_link_libraries( future_process_test_bin future_process_lib ${Boost_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} )
-#add_test( future_process_test future_process_test_bin )
+#add_executable( future_process_test_bin EXCLUDE_FROM_ALL ${HEADER_FILES} ${TEST_FOLDER}/future_process_test.cpp )
+add_executable( future_process_test_bin ${HEADER_FILES} ${TEST_FOLDER}/future_process_test.cpp )
+add_dependencies( future_process_test_bin dependency_stub )
+target_link_libraries( future_process_test_bin uv )
+add_test( future_process_test future_process_test_bin )
 add_dependencies( check future_process_test_bin )
+add_dependencies( full future_process_test_bin )
 
-install( TARGETS future_process_lib DESTINATION lib )
-install( DIRECTORY ${HEADER_FOLDER}/daw DESTINATION include )
+install( DIRECTORY ${HEADER_FOLDER}/daw/ DESTINATION include/daw/ )
 
