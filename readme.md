@@ -99,7 +99,7 @@ Similar to channel but for transferring string like things
 
 ```cpp
 auto chan = daw::process::string_channel( );
-static std::string const message = "This is a long string test, how about that eh! Hello World.";
+static constexpr std::string_view message = "This is a long string test, how about that eh! Hello World.";
 
 auto proc = daw::process::fork_process( [&chan]( unsigned int t ) {
     while( true ) {
@@ -112,7 +112,7 @@ auto proc = daw::process::fork_process( [&chan]( unsigned int t ) {
 
 while( true ) {
     puts( "parent: awaiting child\n" );
-    auto val = chan.read( );
+    std::string val = chan.read( );
     std::cout << "parent: message from child '" << val << "'\n";
     assert( val == message );
 }
