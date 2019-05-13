@@ -118,3 +118,66 @@ while( true ) {
     assert( val == message );
 }
 ```
+
+## Collection Channel
+Send multiple trivial types over a channel.  When reading a ```std::vector<T>``` is returned.
+
+```cpp
+#include <daw/daw_process.h>
+#include <daw/daw_collection_channel.h>
+
+static std::vector<int> mul( std::vector<int> vec, int multiplier ) {
+	for( int & item: vec ) {
+		item *= multiplier;
+	}
+	return vec;
+}
+
+int main( ) {
+	auto chan = daw::process::collection_channel<int>( );
+	static std::vector<int> const message = { 2, 5, 6, 7 };
+
+	auto proc = daw::process::fork_process(
+	  [&chan]( unsigned int t ) {
+	  	int multiplier = 0;
+		  while( true ) {
+			  puts( "child: sleeping\n" );
+			  sleep( t );
+			  puts( "child: awake\n" );
+			  chan.write( mul( message, multiplier++ ) );
+		  }
+	  },
+	  2 );
+
+	int multiplier = 0;
+	while( true ) {
+		puts( "parent: awaiting child\n" );
+		auto val = chan.read( );
+		puts( "parent: message from child " );
+		assert( val == mul( message, multiplier++ ) );
+	}
+}
+```
+
+## Shared Mutex
+An interprocess mutex that acts like ```std::mutex```.  It can be used with items like ```std::lock_guard```
+
+```cpp
+#include <daw/daw_process.h>
+#include <daw/daw_shared_mutex.h>
+
+auto mut = daw::process::shared_mutex( );
+mut.lock( );
+
+auto proc = daw::process::fork_process(
+	[]( daw::process::shared_mutex mtx ) {
+		puts( "child: about to wait\n" );
+		auto lck = std::lock_guard( mtx );
+		puts( "child: awake\n" );
+	},
+	mut );
+
+sleep( 2 );
+puts( "parent: about to wake child\n" );
+mut.unlock( );
+```
