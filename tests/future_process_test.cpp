@@ -22,6 +22,7 @@
 
 #include <iostream>
 #include <numeric>
+#include <unistd.h>
 
 #include <daw/daw_benchmark.h>
 
@@ -40,7 +41,7 @@ struct A {
 
 int main( ) {
 	auto const func = []( int b ) {
-		// sleep( 5 );
+		sleep( 5 );
 		return b * b;
 	};
 

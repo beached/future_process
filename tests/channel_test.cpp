@@ -21,6 +21,7 @@
 // SOFTWARE.
 
 #include <cassert>
+#include <unistd.h>
 
 #include "daw/daw_channel.h"
 #include "daw/daw_process.h"

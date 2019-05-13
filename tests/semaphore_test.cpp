@@ -21,6 +21,7 @@
 // SOFTWARE.
 
 #include <cstdio>
+#include <unistd.h>
 
 #include <daw/daw_process.h>
 #include <daw/daw_semaphore.h>

@@ -21,6 +21,7 @@
 // SOFTWARE.
 
 #include <mutex>
+#include <unistd.h>
 
 #include "daw/daw_process.h"
 #include "daw/daw_shared_mutex.h"

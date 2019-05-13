@@ -23,6 +23,7 @@
 #include <cassert>
 #include <string>
 #include <string_view>
+#include <unistd.h>
 
 #include <daw/daw_benchmark.h>
 
