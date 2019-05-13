@@ -167,17 +167,17 @@ An interprocess mutex that acts like ```std::mutex```.  It can be used with item
 #include <daw/daw_shared_mutex.h>
 
 auto mut = daw::process::shared_mutex( );
-mut.lock( );
+auto lck = std::unique_lock( mut );
 
 auto proc = daw::process::fork_process(
 	[]( daw::process::shared_mutex mtx ) {
 		puts( "child: about to wait\n" );
-		auto lck = std::lock_guard( mtx );
+		auto lck2 = std::lock_guard( mtx );
 		puts( "child: awake\n" );
 	},
 	mut );
 
 sleep( 2 );
 puts( "parent: about to wake child\n" );
-mut.unlock( );
+lck.unlock( );
 ```
