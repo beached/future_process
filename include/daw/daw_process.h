@@ -27,9 +27,7 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-#include <daw/cpp_17.h>
-#include <daw/daw_traits.h>
-#include <daw/daw_utility.h>
+#include <daw/daw_exception.h>
 
 namespace daw::process {
 	template<bool wait_on_pid = true>

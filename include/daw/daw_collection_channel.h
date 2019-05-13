@@ -30,9 +30,6 @@
 #include <type_traits>
 #include <vector>
 
-#include <daw/daw_utility.h>
-#include <daw/cpp_17.h>
-
 #include "daw_channel.h"
 
 namespace daw::process {
@@ -45,8 +42,9 @@ namespace daw::process {
 		collection_channel( ) noexcept = default;
 
 		template<typename Collection,
-		         daw::enable_if_t<!std::is_same_v<
-		           collection_channel, daw::remove_cvref_t<Collection>>> = nullptr>
+		         std::enable_if_t<!std::is_same_v<collection_channel,
+		                                          daw::remove_cvref_t<Collection>>,
+		                          std::nullptr_t> = nullptr>
 		void write( Collection &&collection ) noexcept {
 			buffer_t buff = {};
 			auto first = std::begin( collection );

@@ -25,6 +25,7 @@
 #include <fcntl.h>
 #include <semaphore.h>
 
+#include <daw/daw_exception.h>
 #include <daw/daw_random.h>
 
 namespace daw::process {
@@ -33,7 +34,7 @@ namespace daw::process {
 		bool m_is_copy = false;
 
 		static sem_t *get_sem( int init_value ) noexcept {
-			auto const name = std::to_string( randint<size_t>( ) );
+			auto const name = std::to_string( daw::randint<size_t>( ) );
 			auto result =
 			  sem_open( name.c_str( ), O_CREAT | O_EXCL, 0600, init_value );
 			if( result == SEM_FAILED ) {

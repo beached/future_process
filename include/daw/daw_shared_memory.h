@@ -22,8 +22,10 @@
 
 #pragma once
 
-#include <string>
+#include <cstring>
 #include <sys/mman.h>
+#include <type_traits>
+#include <utility>
 
 namespace daw::process {
 	template<typename T>

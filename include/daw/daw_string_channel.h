@@ -40,7 +40,7 @@ namespace daw::process {
 		string_channel( ) noexcept = default;
 
 		inline void write( std::basic_string_view<CharT> sv ) noexcept {
-			buffer_t buff = { 0 };
+			buffer_t buff = {0};
 			while( !sv.empty( ) ) {
 				auto const sz = std::min( buff_size, sv.size( ) );
 				std::copy_n( sv.data( ), sz, buff.data( ) );
@@ -59,8 +59,7 @@ namespace daw::process {
 			while( msg ) {
 				result.reserve( result.size( ) + buff_size );
 				auto const &buff = *msg;
-				for( auto it = buff.begin( ); it != buff.end( ) and *it != 0;
-				     ++it ) {
+				for( auto it = buff.begin( ); it != buff.end( ) and *it != 0; ++it ) {
 					result.push_back( *it );
 				}
 				msg = m_channel.read( );

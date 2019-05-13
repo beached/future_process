@@ -26,19 +26,18 @@
 #include <functional>
 #include <future>
 #include <sys/wait.h>
+#include <type_traits>
 #include <unistd.h>
 
-#include <daw/cpp_17.h>
-#include <daw/daw_traits.h>
-#include <daw/daw_utility.h>
+#include <daw/daw_exception.h>
 
 #include "daw_channel.h"
 #include "daw_process.h"
 
 namespace daw::process {
 	template<typename Function, typename... Arguments,
-	         typename Ret =
-	           daw::remove_cvref_t<std::invoke_result_t<Function, Arguments...>>>
+	         typename Ret = std::remove_cv_t<std::remove_reference_t<
+	           std::invoke_result_t<Function, Arguments...>>>>
 	std::future<Ret> async( Function &&func, Arguments &&... arguments ) {
 
 		return std::async( std::launch::async,
