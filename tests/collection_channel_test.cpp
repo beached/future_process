@@ -31,9 +31,6 @@
 #include "daw/daw_collection_channel.h"
 #include "daw/daw_process.h"
 
-extern bool can_run;
-bool can_run = true;
-
 static std::vector<int> mul( std::vector<int> vec, int multiplier ) {
 	for( int &item : vec ) {
 		item *= multiplier;
@@ -57,26 +54,26 @@ static void show( std::vector<int> const &vec ) {
 
 int main( ) {
 	auto chan = daw::process::collection_channel<int>( );
+	int count = 5;
 	static std::vector<int> const message = {2, 5, 6, 7};
 
 	auto proc = daw::process::fork_process(
-	  [&chan]( unsigned int t ) {
-		  int multiplier = 0;
-		  while( can_run ) {
+	  [&]( unsigned int t ) {
+		  while( count-- > 0 ) {
 			  puts( "child: sleeping\n" );
 			  sleep( t );
 			  puts( "child: awake\n" );
-			  chan.write( mul( message, multiplier++ ) );
+			  auto msg = mul( message, count );
+			  chan.write( msg );
 		  }
 	  },
-	  2 );
+	  1 );
 
-	int multiplier = 0;
-	while( can_run ) {
+	while( count-- > 0 ) {
 		puts( "parent: awaiting child\n" );
 		auto val = chan.read( );
 		std::cout << "parent: message from child ";
 		show( val );
-		daw::expecting( val, mul( message, multiplier++ ) );
+		daw::expecting( val, mul( message, count ) );
 	}
 }

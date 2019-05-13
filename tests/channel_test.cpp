@@ -27,15 +27,12 @@
 #include "daw/daw_channel.h"
 #include "daw/daw_process.h"
 
-extern bool can_run;
-bool can_run = true;
-
 int main( ) {
 	auto chan = daw::process::channel<unsigned int>( );
-
+	size_t count = 5;
 	auto proc = daw::process::fork_process(
-	  [&chan]( unsigned int t ) {
-		  while( can_run ) {
+	  [&]( unsigned int t ) {
+		  while( count-- > 0 ) {
 			  puts( "child: sleeping\n" );
 			  sleep( t );
 			  puts( "child: awake\n" );
@@ -44,7 +41,7 @@ int main( ) {
 	  },
 	  2 );
 
-	while( can_run ) {
+	while( count-- > 0 ) {
 		puts( "parent: awaiting child\n" );
 		auto val = chan.read( );
 		Unused( val );

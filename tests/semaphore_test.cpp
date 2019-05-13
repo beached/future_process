@@ -26,27 +26,26 @@
 #include <daw/daw_process.h>
 #include <daw/daw_semaphore.h>
 
-extern bool can_run;
-
-bool can_run = true;
-
 int main( ) {
 	auto sem_a = daw::process::semaphore( );
 	auto sem_b = daw::process::semaphore( );
+	size_t count = 5;
 
-	auto proc = daw::process::fork_process( [&]( unsigned int t ) {
-		while( can_run ) {
-			puts( "child: sleeping\n" );
-			sleep( t );
-			puts( "child: awake\n" );
-			sem_b.post( );
-			puts( "child: awaiting parent acknowledgement\n" );
-			sem_a.wait( );
-			puts( "child: got parent's acknowledgement\n" );
-		}
-	}, 2 );
+	auto proc = daw::process::fork_process(
+	  [&]( unsigned int t ) {
+		  while( count-- > 0 ) {
+			  puts( "child: sleeping\n" );
+			  sleep( t );
+			  puts( "child: awake\n" );
+			  sem_b.post( );
+			  puts( "child: awaiting parent acknowledgement\n" );
+			  sem_a.wait( );
+			  puts( "child: got parent's acknowledgement\n" );
+		  }
+	  },
+	  2 );
 
-	while( can_run ) {
+	while( count-- > 0 ) {
 		puts( "parent: awaiting child\n" );
 		sem_b.wait( );
 		puts( "parent: got child's post\n" );

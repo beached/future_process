@@ -31,17 +31,15 @@
 #include "daw/daw_process.h"
 #include "daw/daw_string_channel.h"
 
-extern bool can_run;
-bool can_run = true;
-
 int main( ) {
 	auto chan = daw::process::string_channel{};
+	size_t count = 5;
 	static constexpr std::string_view message =
 	  "This is a long string test, how about that eh! Hello World.";
 
 	auto proc = daw::process::fork_process(
-	  [&chan]( unsigned int t ) {
-		  while( can_run ) {
+	  [&]( unsigned int t ) {
+		  while( count-- > 0 ) {
 			  puts( "child: sleeping\n" );
 			  sleep( t );
 			  puts( "child: awake\n" );
@@ -50,7 +48,7 @@ int main( ) {
 	  },
 	  2 );
 
-	while( can_run ) {
+	while( count-- > 0 ) {
 		puts( "parent: awaiting child\n" );
 		auto val = chan.read( );
 		std::cout << "parent: message from child '" << val << "'\n";

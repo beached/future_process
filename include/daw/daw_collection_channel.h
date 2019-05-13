@@ -33,10 +33,17 @@
 #include "daw_channel.h"
 
 namespace daw::process {
+	namespace impl {
+		template<typename T, size_t Size>
+		struct buffer_t {
+			std::array<T, Size> m_values = {};
+			size_t m_value_count = 0;
+		};
+	} // namespace impl
 	template<typename T, size_t max_items_per_message = 10>
 	class collection_channel {
-		using buffer_t = std::array<std::optional<T>, max_items_per_message>;
-		daw::process::channel<buffer_t> m_channel{};
+		using buffer_t = impl::buffer_t<T, max_items_per_message>;
+		daw::process::channel<std::optional<buffer_t>> m_channel{};
 
 	public:
 		collection_channel( ) noexcept = default;
@@ -46,34 +53,28 @@ namespace daw::process {
 		                                          daw::remove_cvref_t<Collection>>,
 		                          std::nullptr_t> = nullptr>
 		void write( Collection &&collection ) noexcept {
-			buffer_t buff = {};
 			auto first = std::begin( collection );
 			auto last = std::end( collection );
 			while( first != last ) {
-				auto buff_it = buff.begin( );
-				while( first != last and buff_it != std::end( buff ) ) {
-					*buff_it = *first;
-					++first;
-					++buff_it;
+				buffer_t buff = {};
+				for( ; buff.m_value_count < max_items_per_message and first != last;
+				     ++buff.m_value_count, ++first ) {
+
+					buff.m_values[buff.m_value_count] = *first;
 				}
-				if( buff_it != std::end( buff ) ) {
-					*buff_it = std::nullopt;
+				if( buff.m_value_count > 0 ) {
+					m_channel.write( buff );
 				}
-				m_channel.write( buff );
 			}
-			buff.front( ) = std::nullopt;
-			m_channel.write( buff );
+			m_channel.write( std::nullopt );
 		}
 
 		inline std::vector<T> read( ) noexcept {
 			auto result = std::vector<T>( );
 			auto msg = m_channel.read( );
-			while( msg.front( ) ) {
-				auto it = msg.begin( );
-				while( *it ) {
-					result.push_back( **it );
-					++it;
-				}
+			auto it_out = std::back_inserter( result );
+			while( msg ) {
+				std::copy_n( msg->m_values.begin( ), msg->m_value_count, it_out );
 				msg = m_channel.read( );
 			}
 			return result;
