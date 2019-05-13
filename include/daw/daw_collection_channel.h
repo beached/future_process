@@ -52,7 +52,7 @@ namespace daw::process {
 		         std::enable_if_t<!std::is_same_v<collection_channel,
 		                                          daw::remove_cvref_t<Collection>>,
 		                          std::nullptr_t> = nullptr>
-		void write( Collection &&collection ) noexcept {
+		inline void write( Collection &&collection ) {
 			auto first = std::begin( collection );
 			auto last = std::end( collection );
 			while( first != last ) {
@@ -69,8 +69,9 @@ namespace daw::process {
 			m_channel.write( std::nullopt );
 		}
 
-		inline std::vector<T> read( ) noexcept {
-			auto result = std::vector<T>( );
+		template<typename Result = std::vector<T>>
+		inline Result read( ) {
+			auto result = Result( );
 			auto msg = m_channel.read( );
 			auto it_out = std::back_inserter( result );
 			while( msg ) {

@@ -28,43 +28,22 @@
 #include <string>
 #include <string_view>
 
-#include "daw_channel.h"
+#include "daw_collection_channel.h"
 
 namespace daw::process {
 	template<typename CharT = char, size_t buff_size = 20>
 	class string_channel {
-		using buffer_t = std::array<CharT, buff_size>;
-		daw::process::channel<std::optional<buffer_t>> m_channel{};
+		daw::process::collection_channel<CharT, buff_size> m_channel{};
 
 	public:
 		string_channel( ) noexcept = default;
 
-		inline void write( std::basic_string_view<CharT> sv ) noexcept {
-			buffer_t buff = {0};
-			while( !sv.empty( ) ) {
-				auto const sz = std::min( buff_size, sv.size( ) );
-				std::copy_n( sv.data( ), sz, buff.data( ) );
-				if( sz < buff_size ) {
-					buff[sz] = 0;
-				}
-				m_channel.write( buff );
-				sv.remove_prefix( sz );
-			}
-			m_channel.write( std::nullopt );
+		inline void write( std::basic_string_view<CharT> sv ) {
+			m_channel.write( sv );
 		}
 
-		inline std::basic_string<CharT> read( ) noexcept {
-			std::basic_string<CharT> result{};
-			auto msg = m_channel.read( );
-			while( msg ) {
-				result.reserve( result.size( ) + buff_size );
-				auto const &buff = *msg;
-				for( auto it = buff.begin( ); it != buff.end( ) and *it != 0; ++it ) {
-					result.push_back( *it );
-				}
-				msg = m_channel.read( );
-			}
-			return result;
+		inline std::basic_string<CharT> read( ) {
+			return m_channel.template read<std::basic_string<CharT>>( );
 		}
 	};
 } // namespace daw::process
