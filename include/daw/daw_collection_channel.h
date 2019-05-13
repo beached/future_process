@@ -40,6 +40,14 @@ namespace daw::process {
 			size_t m_value_count = 0;
 		};
 	} // namespace impl
+
+	struct push_back_appender {
+		template<typename Collection>
+		decltype(auto) operator( )( Collection && col ) const {
+			return std::back_inserter( std::forward<Collection>( col ) );
+		}
+	};
+
 	template<typename T, size_t max_items_per_message = 10>
 	class collection_channel {
 		using buffer_t = impl::buffer_t<T, max_items_per_message>;
@@ -69,11 +77,11 @@ namespace daw::process {
 			m_channel.write( std::nullopt );
 		}
 
-		template<typename Result = std::vector<T>>
+		template<typename Result = std::vector<T>, typename Appender = push_back_appender>
 		inline Result read( ) {
-			auto result = Result( );
+			auto result = Result{};
 			auto msg = m_channel.read( );
-			auto it_out = std::back_inserter( result );
+			auto it_out = Appender{}( result );
 			while( msg ) {
 				std::copy_n( msg->m_values.begin( ), msg->m_value_count, it_out );
 				msg = m_channel.read( );
