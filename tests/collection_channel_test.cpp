@@ -21,26 +21,27 @@
 // SOFTWARE.
 
 #include <cassert>
+#include <cstdio>
 #include <string>
 #include <string_view>
 #include <unistd.h>
 
 #include <daw/daw_benchmark.h>
 
-#include "daw/daw_process.h"
 #include "daw/daw_collection_channel.h"
+#include "daw/daw_process.h"
 
 extern bool can_run;
 bool can_run = true;
 
 static std::vector<int> mul( std::vector<int> vec, int multiplier ) {
-	for( int & item: vec ) {
+	for( int &item : vec ) {
 		item *= multiplier;
 	}
 	return vec;
 }
 
-static void show( std::vector<int> const & vec ) {
+static void show( std::vector<int> const &vec ) {
 	std::cout << "{ ";
 	if( !vec.empty( ) ) {
 		auto it = vec.begin( );
@@ -56,11 +57,11 @@ static void show( std::vector<int> const & vec ) {
 
 int main( ) {
 	auto chan = daw::process::collection_channel<int>( );
-	static std::vector<int> const message = { 2, 5, 6, 7 };
+	static std::vector<int> const message = {2, 5, 6, 7};
 
 	auto proc = daw::process::fork_process(
 	  [&chan]( unsigned int t ) {
-	  	int multiplier = 0;
+		  int multiplier = 0;
 		  while( can_run ) {
 			  puts( "child: sleeping\n" );
 			  sleep( t );

@@ -21,6 +21,7 @@
 // SOFTWARE.
 
 #include <cassert>
+#include <cstdio>
 #include <string>
 #include <string_view>
 #include <unistd.h>
