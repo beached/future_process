@@ -39,23 +39,24 @@ namespace daw::process {
 	         typename Ret = std::remove_cv_t<std::remove_reference_t<
 	           std::invoke_result_t<Function, Arguments...>>>>
 	std::future<Ret> async( Function &&func, Arguments &&... arguments ) {
+		return std::async(
+		  std::launch::async,
+		  []( auto &&f, auto &&... args ) -> Ret {
+			  // Child
+			  auto mem = daw::process::shared_memory<Ret>( );
+			  auto sem = daw::process::semaphore( );
+			  auto proc = daw::process::fork_process( [&]( ) {
+				  mem.write( std::invoke( *std::forward<Function>( f ),
+				                          std::forward<Arguments>( args )... ) );
+				  sem.post( );
+			  } );
 
-		return std::async( std::launch::async,
-		                   [&]( ) -> Ret {
-			                   auto mem = daw::process::shared_memory<Ret>( );
-			                   auto sem = daw::process::semaphore( );
-			                   auto proc = daw::process::fork_process( [&]( ) {
-				                   mem.write( std::invoke(
-				                     *func, std::forward<Arguments>( arguments )... ) );
-				                   sem.post( );
-			                   } );
-
-			                   proc.join( );
-			                   daw::exception::daw_throw_on_false<std::runtime_error>(
-			                     sem.try_wait( ), "Error running callable" );
-			                   return mem.read( );
-		                   }
-
-		);
+			  // Parent
+			  proc.join( );
+			  daw::exception::daw_throw_on_false<std::runtime_error>(
+			    sem.try_wait( ), "Error running callable" );
+			  return mem.read( );
+		  },
+		  std::forward<Function>( func ), std::forward<Arguments>( arguments )... );
 	}
 } // namespace daw::process
