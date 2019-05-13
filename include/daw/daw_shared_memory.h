@@ -56,6 +56,15 @@ namespace daw::process {
 			cleanup( );
 		}
 
+		void *raw_data( ) noexcept {
+			return const_cast<char *>( m_data );
+		}
+
+		T *data( ) {
+			return std::launder(
+			  reinterpret_cast<T *>( const_cast<char *>( m_data ) ) );
+		}
+
 		shared_memory( shared_memory const &other ) noexcept
 		  : m_data( other.m_data )
 		  , m_is_copy( true ) {}

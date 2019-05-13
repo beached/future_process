@@ -44,8 +44,9 @@ set( HEADER_FILES
 	${HEADER_FOLDER}/daw/daw_collection_channel.h
 	${HEADER_FOLDER}/daw/daw_future_process.h
 	${HEADER_FOLDER}/daw/daw_process.h
-	${HEADER_FOLDER}/daw/daw_shared_memory.h
 	${HEADER_FOLDER}/daw/daw_semaphore.h
+	${HEADER_FOLDER}/daw/daw_shared_memory.h
+	${HEADER_FOLDER}/daw/daw_shared_mutex.h
 	${HEADER_FOLDER}/daw/daw_string_channel.h
 )
 
@@ -99,6 +100,14 @@ target_link_libraries( collection_channel_test_bin ${COMPILER_SPECIFIC_LIBS} ${C
 add_test( collection_channel_test collection_channel_test_bin )
 add_dependencies( check collection_channel_test_bin )
 add_dependencies( full collection_channel_test_bin )
+
+#add_executable( shared_mutex_test_bin EXCLUDE_FROM_ALL ${HEADER_FILES} ${TEST_FOLDER}/shared_mutex_test.cpp )
+add_executable( shared_mutex_test_bin ${HEADER_FILES} ${TEST_FOLDER}/shared_mutex_test.cpp )
+add_dependencies( shared_mutex_test_bin dependency_stub )
+target_link_libraries( shared_mutex_test_bin ${COMPILER_SPECIFIC_LIBS} ${CMAKE_THREAD_LIBS_INIT} )
+add_test( shared_mutex_test shared_mutex_test_bin )
+add_dependencies( check shared_mutex_test_bin )
+add_dependencies( full shared_mutex_test_bin )
 
 install( DIRECTORY ${HEADER_FOLDER}/daw/ DESTINATION include/daw/ )
 
