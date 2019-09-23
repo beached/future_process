@@ -29,21 +29,49 @@
 #include "daw_shared_memory.h"
 
 namespace daw::process {
+	namespace impl {
+		struct pthread_mutex_attribute {
+			pthread_mutexattr_t value{};
+			int err = 0;
+
+			pthread_mutex_attribute( ) {
+				err = pthread_mutexattr_init( &value );
+				daw::exception::daw_throw_on_true( err );
+			}
+
+			void set_shared( ) {
+				if( !err ) {
+					err = pthread_mutexattr_setpshared( &value, PTHREAD_PROCESS_SHARED );
+				}
+			}
+
+			~pthread_mutex_attribute( ) noexcept {
+				if( !err ) {
+					pthread_mutexattr_destroy( &value );
+				}
+			}
+
+			operator bool( ) const noexcept {
+				return !err;
+			}
+
+			operator pthread_mutexattr_t *( ) {
+				return &value;
+			}
+		};
+	} // namespace impl
+
 	class shared_mutex {
 		daw::process::shared_memory<pthread_mutex_t> m_mutex{};
 		bool m_is_copy = false;
 
 	public:
 		shared_mutex( ) {
-			pthread_mutexattr_t attr{};
-			auto err = pthread_mutexattr_init( &attr );
-			daw::exception::daw_throw_on_true( err );
-			err = pthread_mutexattr_setpshared( &attr, PTHREAD_PROCESS_SHARED );
-			daw::exception::daw_throw_on_true( err );
+			auto attr = impl::pthread_mutex_attribute( );
+			attr.set_shared();
+			daw::exception::daw_throw_on_false( attr );
 
-			err = pthread_mutex_init( m_mutex.data( ), &attr );
-			daw::exception::daw_throw_on_true( err );
-			err = pthread_mutexattr_destroy( &attr );
+			auto err = pthread_mutex_init( m_mutex.data( ), attr );
 			daw::exception::daw_throw_on_true( err );
 		}
 

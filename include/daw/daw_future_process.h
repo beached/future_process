@@ -39,6 +39,7 @@ namespace daw::process {
 	         typename Ret = std::remove_cv_t<std::remove_reference_t<
 	           std::invoke_result_t<Function, Arguments...>>>>
 	std::future<Ret> async( Function &&func, Arguments &&... arguments ) {
+
 		return std::async(
 		  std::launch::async,
 		  []( auto &&f, auto &&... args ) -> Ret {

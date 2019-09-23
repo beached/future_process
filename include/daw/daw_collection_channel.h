@@ -43,7 +43,7 @@ namespace daw::process {
 
 	struct push_back_appender {
 		template<typename Collection>
-		decltype(auto) operator( )( Collection && col ) const {
+		decltype( auto ) operator( )( Collection &&col ) const {
 			return std::back_inserter( std::forward<Collection>( col ) );
 		}
 	};
@@ -56,11 +56,10 @@ namespace daw::process {
 	public:
 		collection_channel( ) noexcept = default;
 
-		template<typename Collection,
-		         std::enable_if_t<!std::is_same_v<collection_channel,
-		                                          daw::remove_cvref_t<Collection>>,
-		                          std::nullptr_t> = nullptr>
+		template<typename Collection>
 		inline void write( Collection &&collection ) {
+			static_assert(
+			  !std::is_same_v<collection_channel, daw::remove_cvref_t<Collection>> );
 			auto first = std::begin( collection );
 			auto last = std::end( collection );
 			while( first != last ) {
@@ -77,7 +76,8 @@ namespace daw::process {
 			m_channel.write( std::nullopt );
 		}
 
-		template<typename Result = std::vector<T>, typename Appender = push_back_appender>
+		template<typename Result = std::vector<T>,
+		         typename Appender = push_back_appender>
 		inline Result read( ) {
 			auto result = Result{};
 			auto msg = m_channel.read( );
